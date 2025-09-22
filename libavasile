@@ -498,11 +498,9 @@ prepareiso() {
         mkdir -p "${dir}"
     done
     
-    local source_size
-    source_size=$(du -sb "${chrootx64}" | cut -f1)
-    local image_size=$(( (source_size * 120) / 100 / 1048576 ))
+    local image_size=20480
     
-    einfo "Creating base filesystem image (${image_size}MB based on source size)..."
+    einfo "Creating base filesystem image (${image_size}MB / 20GiB)..."
     dd if=/dev/zero of="${ISO_RSYNC_TARGET}.img" bs=1M count="${image_size}" status=progress
     mkfs.ext4 -F -m 0 "${ISO_RSYNC_TARGET}.img"
 

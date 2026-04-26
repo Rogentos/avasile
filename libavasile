@@ -183,11 +183,13 @@ set_make_conf_symlink() {
 	local conf_variant="${1}"
 	local make_conf_path="${PORTAGE_LINK_CONFDIR}/make.conf"
 
-	if [[ -d "${make_conf_path}" ]]; then
-		ln -sf "${PORTAGE_GITDIR}/${conf_variant}" "${make_conf_path}/main.conf"
-	else
-		ln -sf "${PORTAGE_LINK_CONFDIR}/${conf_variant}" "${make_conf_path}"
+	if [[ -L "${make_conf_path}" ]]; then
+		rm -f "${make_conf_path}"
 	fi
+
+	mkdir -p "${make_conf_path}"
+
+	ln -sf "${PORTAGE_GITDIR}/${conf_variant}" "${make_conf_path}/main.conf"
 }
 
 chrootchecksum() {
@@ -770,11 +772,12 @@ removeportageconfig() {
 	einfo "Removing ${releasename}-${releasetarget} build system"
 	
 	local config_files=(
-		"${PORTAGE_LINK_CONFDIR}/make.conf"
 		"${PORTAGE_LINK_CONFDIR}/make.profile"
 		"${PORTAGE_LINK_CONFDIR}"
 	)
-	
+
+	rm -rf "${PORTAGE_LINK_CONFDIR}/make.conf" >/dev/null 2>&1
+
 	for config_file in "${config_files[@]}"; do
 		rm -f "${config_file}" >/dev/null 2>&1
 	done

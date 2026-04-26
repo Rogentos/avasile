@@ -119,9 +119,15 @@ kernelconfig() {
 }
 
 checkmode() {
+	local make_conf_path="${PORTAGE_LINK_CONFDIR}/make.conf"
 	local avasile_mode
-	avasile_mode=$(readlink -f /etc/portage/make.conf)
-	
+
+	if [[ -d "${make_conf_path}" ]]; then
+		avasile_mode=$(readlink -f "${make_conf_path}/main.conf")
+	else
+		avasile_mode=$(readlink -f "${make_conf_path}")
+	fi
+
 	case "${avasile_mode}" in
 		"${PORTAGE_MAIN_CONFDIR}/conf/intel/portage/make.conf.amd64-user")
 			echo "$0 is on --usermode"
@@ -162,6 +168,25 @@ checkiflive() {
 	if [[ -L /dev/mapper/live-base ]]; then
 		eerror "Running in Live mode is unsupported"
 		exit 1
+	fi
+}
+
+ensure_make_conf_local() {
+	local conf_local="/etc/portage/make.conf.local"
+	if [[ ! -f "${conf_local}" ]]; then
+		touch "${conf_local}"
+		einfo "Created empty ${conf_local}"
+	fi
+}
+
+set_make_conf_symlink() {
+	local conf_variant="${1}"
+	local make_conf_path="${PORTAGE_LINK_CONFDIR}/make.conf"
+
+	if [[ -d "${make_conf_path}" ]]; then
+		ln -sf "${PORTAGE_GITDIR}/${conf_variant}" "${make_conf_path}/main.conf"
+	else
+		ln -sf "${PORTAGE_LINK_CONFDIR}/${conf_variant}" "${make_conf_path}"
 	fi
 }
 
@@ -935,7 +960,7 @@ setbinmodeconfig() {
 	einfo "Configuring binary mode (usermode)"
 	
 	ln -sf "${PORTAGE_GITDIR}" "${PORTAGE_LINK_CONFDIR}"
-	ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-user" "${PORTAGE_LINK_CONFDIR}/make.conf"
+	set_make_conf_symlink "make.conf.amd64-user"
 	
 	# Set appropriate Gentoo profile
 	eselect profile set "default/linux/amd64/23.0/desktop/plasma/systemd"
@@ -953,7 +978,7 @@ setmixedmodeconfig() {
 	einfo "Configuring mixed mode (development)"
 	
 	ln -sf "${PORTAGE_GITDIR}" "${PORTAGE_LINK_CONFDIR}"
-	ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-devel" "${PORTAGE_LINK_CONFDIR}/make.conf"
+	set_make_conf_symlink "make.conf.amd64-devel"
 	
 	# Set appropriate Gentoo profile  
 	eselect profile set "default/linux/amd64/23.0/desktop/plasma/systemd"
@@ -961,7 +986,8 @@ setmixedmodeconfig() {
 	# Update environment
 	env-update
 	source /etc/profile
-	
+
+	ensure_make_conf_local
 	einfo "Mixed mode configuration completed"
 }
 
@@ -971,7 +997,7 @@ setsrcmodeconfig() {
 	einfo "Configuring source mode"
 	
 	ln -sf "${PORTAGE_GITDIR}" "${PORTAGE_LINK_CONFDIR}"
-	ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-srcmode" "${PORTAGE_LINK_CONFDIR}/make.conf"
+	set_make_conf_symlink "make.conf.amd64-srcmode"
 	
 	# Set appropriate Gentoo profile
 	eselect profile set "default/linux/amd64/23.0/desktop/plasma/systemd"
@@ -979,7 +1005,8 @@ setsrcmodeconfig() {
 	# Update environment
 	env-update
 	source /etc/profile
-	
+
+	ensure_make_conf_local
 	einfo "Source mode configuration completed"
 }
 
@@ -989,7 +1016,7 @@ setsrcmodecustom() {
 	einfo "Configuring custom source mode"
 	
 	ln -sf "${PORTAGE_GITDIR}" "${PORTAGE_LINK_CONFDIR}"
-	ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-custom" "${PORTAGE_LINK_CONFDIR}/make.conf"
+	set_make_conf_symlink "make.conf.amd64-custom"
 	
 	# Set appropriate Gentoo profile
 	eselect profile set "default/linux/amd64/23.0/desktop/plasma/systemd"
@@ -997,7 +1024,8 @@ setsrcmodecustom() {
 	# Update environment
 	env-update
 	source /etc/profile
-	
+
+	ensure_make_conf_local
 	einfo "Custom source mode configuration completed"
 }
 
@@ -1104,8 +1132,7 @@ decentralized_user() {
 	
 	if [[ -e "${PORTAGE_MAIN_CONFDIR}" ]]; then
 		# Configure for binary packages
-		rm -f "${PORTAGE_LINK_CONFDIR}/make.conf"
-		ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-user" "${PORTAGE_LINK_CONFDIR}/make.conf"
+		set_make_conf_symlink "make.conf.amd64-user"
 		ln -sf "${PORTAGE_LINK_CONFDIR}/binhost-main.conf" "${PORTAGE_LINK_CONFDIR}/binhost.conf"
 		
 		# Set Gentoo profile
@@ -1114,7 +1141,8 @@ decentralized_user() {
 		# Update environment
 		env-update
 		source /etc/profile
-		
+
+		ensure_make_conf_local
 		einfo "Decentralized user mode configured"
 	else
 		ewarn "Clone directory not found: ${PORTAGE_MAIN_CONFDIR}"
@@ -1127,7 +1155,7 @@ decentralized_devel() {
 	
 	if [[ -e "${PORTAGE_MAIN_CONFDIR}" ]]; then
 		# Configure for mixed binary/source usage
-		ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-devel" "${PORTAGE_LINK_CONFDIR}/make.conf"
+		set_make_conf_symlink "make.conf.amd64-devel"
 		ln -sf "${PORTAGE_LINK_CONFDIR}/binhost-main.conf" "${PORTAGE_LINK_CONFDIR}/binhost.conf"
 		
 		# Set Gentoo profile
@@ -1136,7 +1164,8 @@ decentralized_devel() {
 		# Update environment
 		env-update
 		source /etc/profile
-		
+
+		ensure_make_conf_local
 		einfo "Decentralized development mode configured"
 	else
 		ewarn "Clone directory not found: ${PORTAGE_MAIN_CONFDIR}"
@@ -1149,7 +1178,7 @@ decentralized_source() {
 	
 	if [[ -e "${PORTAGE_MAIN_CONFDIR}" ]]; then
 		# Configure for source-only compilation
-		ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-srcmode" "${PORTAGE_LINK_CONFDIR}/make.conf"
+		set_make_conf_symlink "make.conf.amd64-srcmode"
 		ln -sf "${PORTAGE_LINK_CONFDIR}/binhost-main.conf" "${PORTAGE_LINK_CONFDIR}/binhost.conf"
 		
 		# Set Gentoo profile
@@ -1158,7 +1187,8 @@ decentralized_source() {
 		# Update environment
 		env-update
 		source /etc/profile
-		
+
+		ensure_make_conf_local
 		einfo "Decentralized source mode configured"
 	else
 		ewarn "Clone directory not found: ${PORTAGE_MAIN_CONFDIR}"
@@ -1176,7 +1206,7 @@ decentralized_custom() {
 		fi
 		
 		# Configure for custom usage
-		ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-custom" "${PORTAGE_LINK_CONFDIR}/make.conf"
+		set_make_conf_symlink "make.conf.amd64-custom"
 		ln -sf "${PORTAGE_LINK_CONFDIR}/binhost-main.conf" "${PORTAGE_LINK_CONFDIR}/binhost.conf"
 		
 		# Set Gentoo profile
@@ -1185,7 +1215,8 @@ decentralized_custom() {
 		# Update environment
 		env-update
 		source /etc/profile
-		
+
+		ensure_make_conf_local
 		einfo "Decentralized custom mode configured"
 	else
 		ewarn "Clone directory not found: ${PORTAGE_MAIN_CONFDIR}"
@@ -1203,7 +1234,7 @@ decentralized_gentoo() {
 		fi
 		
 		# Configure for pure Gentoo
-		ln -sf "${PORTAGE_LINK_CONFDIR}/make.conf.amd64-custom" "${PORTAGE_LINK_CONFDIR}/make.conf"
+		set_make_conf_symlink "make.conf.amd64-custom"
 		ln -sf "${PORTAGE_LINK_CONFDIR}/binhost-main.conf" "${PORTAGE_LINK_CONFDIR}/binhost.conf"
 		
 		# Set Gentoo profile
@@ -1212,6 +1243,8 @@ decentralized_gentoo() {
 		# Update environment
 		env-update
 		source /etc/profile
+
+		ensure_make_conf_local
 	fi
 	
 	# Remove Argent-specific git configuration

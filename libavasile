@@ -55,7 +55,7 @@ export isoramfsname="initramfs-genkernel-${isomainarch}-${kernelver}"
 export isoramfscmd="dracut -N -a dmsquash-live -a pollcdrom -a mdraid \
     -o systemd -o systemd-initrd -o systemd-networkd -o dracut-systemd \
     -o btrfs -o crypt -o i18n -o usrmount -o lunmask -o nvdimm -o multipath \
-    -I busybox --force --kver ${kernelver} /boot/${isoramfsname}"
+    --force --kver ${kernelver} /boot/${isoramfsname}"
 
 export isoeficmd="grub-mkimage -d /usr/lib/grub/x86_64-efi -o bootx64.efi \
     -O x86_64-efi ext2 fat udf btrfs ntfs reiserfs xfs hfsplus lvm ata \

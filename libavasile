@@ -10,6 +10,11 @@
 # Import Gentoo functions
 source /lib/gentoo/functions.sh
 
+export AVASILE_VERBOSE="${AVASILE_VERBOSE:-0}"
+if [[ "${AVASILE_VERBOSE}" -eq 1 ]]; then
+	set -x
+fi
+
 # =============================================================================
 # CONFIGURATION VARIABLES
 # =============================================================================

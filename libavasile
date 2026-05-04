@@ -20,7 +20,7 @@ export releasetarget="ws"
 export releaseversion="1"
 
 # Kernel Configuration
-export KERNEL_VERSION="${KERNEL_VERSION:-6.12.9}"
+export KERNEL_VERSION="${KERNEL_VERSION:-6.12.85}"
 export kernelver="${KERNEL_VERSION}-${releasename}"
 
 # Core SquashFS Configuration

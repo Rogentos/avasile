@@ -35,7 +35,7 @@ export chrootx64md5="${chrootx64}.md5"
 # Overlay Mount Directories
 export rodir="rodir"
 export rwdir="rwdir"
-export workdir="workdir"  # Required for overlayfs on kernel > 3.18
+export workdir="workdir"
 export overlaydir="overlaydir"
 
 # Build Environment Variables
@@ -516,7 +516,7 @@ prepareiso() {
     einfo "PREPARING ISO IMAGE LAYOUT"
     einfo "========================================"
     
-    # Create directory structure
+    # Create ISO directory structure
     local iso_directories=(
         "${ISO_RSYNC_TARGET}"
         "${ISO_RSYNC_SOURCE}"

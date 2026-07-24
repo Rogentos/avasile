@@ -21,6 +21,15 @@ source /lib64/avasile/libavasile
 
 checkiflive
 
+export AVASILE_SKIP_KEYS="${AVASILE_SKIP_KEYS:-0}"
+_avasile_args=()
+for _arg in "$@"; do
+	case "${_arg}" in
+		--skip-keys|--no-keys) AVASILE_SKIP_KEYS=1 ;;
+		*) _avasile_args+=("${_arg}") ;;
+	esac
+done
+set -- "${_avasile_args[@]}"
 
 case $1 in
 	--status)
@@ -36,6 +45,9 @@ case $1 in
 		;;
 	--resetmode)
 		resetmode
+		;;
+	--regen-keys)
+		regen_pkg_keys
 		;;
 	--usermode)
 		binmode
